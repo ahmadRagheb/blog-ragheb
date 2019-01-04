@@ -6,6 +6,8 @@ var open = require('gulp-open'); // Open url in web browser
 var browserify = require('browserify');//Bundles JS
 var reactify = require('reactify');//Transforms React JSX to JS
 var source = require('vinyl-source-stream');//Use to conventional text streams with Gulp
+var concat = require('gulp-concat'); //Concatenates files
+var lint = require('gulp-eslint'); //Lint JS files include JSX 
 
 var config = {
 	port:9005,
@@ -13,6 +15,10 @@ var config = {
 	paths: {
 		html: './src/*.html',
 		js: './src/**/*.js',
+		css: [
+			'node_modules/bootstrap/dist/css/bootstrap.min.css',
+			'node_modules/bootstrap/dist/css/bootstrap-theme.min.css',
+		],
 		dist: './dist',
 		mainJS: './src/main.js'
 	}
@@ -52,11 +58,24 @@ gulp.task('js',function() {
 	.pipe(connect.reload());
 });
 
+//task for css 
+gulp.task('css',function(){
+	gulp.src(config.paths.css)
+	.pipe(concat('bundle.css'))
+	.pipe(gulp.dest(config.paths.dist+'/css'));
+})
+
+//task for eslint 
+gulp.task('lint',function(){
+	return gulp.src(config.paths.js)
+	.pipe(lint({config:'eslint.config.json'}))
+	.pipe(lint.format());
+})
 //task to watch htlm files so if any thing changes it runs html task 
 gulp.task('watch',function() {
 	gulp.watch(config.paths.html, ['html']);
-	gulp.watch(config.paths.js, ['js']);
+	gulp.watch(config.paths.js, ['js','lint']);
 })
 
 //If i go to command line write gulp it should run html and open tasks
-gulp.task('default', ['html','js', 'open','watch']);
+gulp.task('default', ['html','js', 'css', 'lint', 'open','watch']);
